@@ -12,8 +12,8 @@ const schema = Joi.object({
     .required(),
   genre: Joi.string().required(),
   language: Joi.string().required(),
-  lrc_content: Joi.string().allow(""),
-  play_duration: Joi.number(),
+  lrc_content: Joi.string().allow("").required(),
+  play_duration: Joi.number().required(),
 });
 
 module.exports = schema;

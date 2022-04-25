@@ -1,13 +1,6 @@
 const asyncHandler = require("express-async-handler");
-const path = require("path");
 const validateReq = require("../../helpers/uploadValidator");
-const { getFileId, getId } = require("./../../helpers/id-gen");
-const {
-  ref,
-  getStorage,
-  getDownloadURL,
-  uploadBytesResumable,
-} = require("firebase/storage");
+const { getId } = require("./../../helpers/id-gen");
 const app = require("./../../config/firebaseConfig");
 const schema = require("./../../schemas/admin/albumSchema");
 const {
@@ -19,6 +12,7 @@ const {
 } = require("firebase/firestore");
 const getDocIds = require("./../../helpers/firebase/docId");
 const insertOne = require("./../../helpers/mongo/insertOne");
+const imageUploader = require("./../../helpers/firebase/imageUploader");
 
 // @desc   Create an album
 // @route  POST /create-album
@@ -34,56 +28,48 @@ const createAlbum = asyncHandler(async (req, res, next) => {
     artist_list
   );
 
-  const imageRef = ref(
-    getStorage(app),
-    `/images/${getFileId(26)()}${path.extname(req.file.originalname)}`
-  );
   const docRef = collection(getFirestore(app), "albums");
-
-  const uploadTask = uploadBytesResumable(imageRef, req.file.buffer);
-  uploadTask.on(
-    "state_changed",
-    (snapshot) => {},
-    (error) => {
-      next(error);
-    },
-    async (completed) => {
-      const id = getId(20)();
-      try {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        await addDoc(docRef, {
-          name,
-          id,
-          description,
-          genre,
-          images: [url],
-          artist_list,
-          tracks: [],
+  const images = await imageUploader(req.file.buffer);
+  const i100 = images.filter((el) => Object.keys(el) == 100);
+  const i300 = images.filter((el) => Object.keys(el) == 300);
+  const id = getId(20)();
+  const document = {
+    name,
+    id,
+    description,
+    genre,
+    images,
+    artist_list,
+    tracks: [],
+  };
+  try {
+    await addDoc(docRef, document);
+    await insertOne("autocompletedata", {
+      name,
+      id,
+      images: Object.values(i100[0]),
+      type: "Album",
+    });
+    await Promise.all(
+      await artist_doc_ids.map(async (artist) => {
+        await updateDoc(doc(getFirestore(app), "artists", artist), {
+          artist_albums: [
+            {
+              name,
+              id,
+              images: Object.values(i300[0]),
+            },
+          ],
         });
-        await insertOne("albums", {
-          name,
-          id,
-        });
-        await Promise.all(
-          await artist_doc_ids.map(async (artist) => {
-            await updateDoc(doc(getFirestore(app), "artists", artist), {
-              artist_albums: [
-                {
-                  name,
-                  id,
-                },
-              ],
-            });
-          })
-        );
-        res.status(200).json({
-          status: "success",
-        });
-      } catch (error) {
-        next(error);
-      }
-    }
-  );
+      })
+    );
+    res.status(200).json({
+      status: "success",
+      document,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = createAlbum;

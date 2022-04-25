@@ -10,22 +10,19 @@ const {
   updateDoc,
 } = require("firebase/firestore");
 const schema = require("./../../schemas/admin/songSchema");
-const {
-  uploadBytesResumable,
-  ref,
-  getStorage,
-  getDownloadURL,
-} = require("firebase/storage");
+const { ref, getStorage } = require("firebase/storage");
 const { getFileId, getId } = require("./../../helpers/id-gen");
 const insertOne = require("./../../helpers/mongo/insertOne");
 const getDocIds = require("./../../helpers/firebase/docId");
 const getDocument = require("./../../helpers/firebase/getDocument");
+const firebaseUploader = require("./../../helpers/firebase/firebaseUploader");
+const imageUploader = require("./../../helpers/firebase/imageUploader");
 
 // @desc   Upload a song to database
 // @route  POST /upload-song
 // @access Private
 
-const artistUploader = asyncHandler(async (req, res, next) => {
+const uploadSong = asyncHandler(async (req, res, next) => {
   validateReq(schema, req, res);
 
   const {
@@ -46,53 +43,50 @@ const artistUploader = asyncHandler(async (req, res, next) => {
     getStorage(app),
     `/songs/${getFileId(30)()}${path.extname(req.file.originalname)}`
   );
-
-  const uploadTask = uploadBytesResumable(songRef, req.file.buffer);
-  uploadTask.on(
-    "state_changed",
-    (snapshot) => {},
-    (error) => {
-      next(error);
-    },
-    async (complete) => {
-      const id = getId(30)();
-      try {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        await addDoc(docRef, {
-          id,
+  const id = getId(30)();
+  const songUrl = await firebaseUploader(songRef, req.file.buffer, {
+    contentType: "audio/mpeg",
+  });
+  const images = albumDoc.images;
+  const i100 = images.filter((el) => Object.keys(el) == 100);
+  const document = {
+    id,
+    name,
+    album_id,
+    album_name,
+    artist_list,
+    genre,
+    language,
+    images,
+    lrc_exists: lrc_content.length === 0 ? false : true,
+    lrc_content,
+    play_duration,
+    play_url_list: [songUrl],
+  };
+  try {
+    await addDoc(docRef, document);
+    await insertOne("autocompletedata", {
+      name,
+      id,
+      images: Object.values(i100[0]),
+      type: "Song",
+    });
+    await updateDoc(doc(getFirestore(app), "albums", albumDocId[0]), {
+      tracks: [
+        {
           name,
-          album_id,
-          album_name,
-          artist_list,
-          genre,
-          language,
-          images: albumDoc.images,
-          lrc_exists: lrc_content.length === 0 ? false : true,
-          lrc_content,
+          id,
           play_duration,
-          play_url_list: [url],
-        });
-        await insertOne("songs", {
-          name,
-          id,
-        });
-        await updateDoc(doc(getFirestore(app), "albums", albumDocId[0]), {
-          tracks: [
-            {
-              name,
-              id,
-              play_duration,
-            },
-          ],
-        });
-        res.status(200).json({
-          status: "success",
-        });
-      } catch (error) {
-        next(error);
-      }
-    }
-  );
+        },
+      ],
+    });
+    res.status(200).json({
+      status: "success",
+      document,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-module.exports = artistUploader;
+module.exports = uploadSong;

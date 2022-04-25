@@ -12,6 +12,9 @@ connectDB();
 app.use("/signup", require("./controllers/users/signup"));
 app.use("/login", require("./controllers/users/login"));
 app.use("/api", require("./routes/routes"));
+
+app.use("/search", require("./controllers/search"));
+
 app.use("/admin", require("./routes/adminRoutes"));
 
 app.use(errorHandler);

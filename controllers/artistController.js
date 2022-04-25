@@ -5,10 +5,10 @@ const {
   query,
   getFirestore,
   limit,
-  getDocs,
   where,
 } = require("firebase/firestore");
 const ref = collection(getFirestore(app), "artists");
+const getFirebaseDoc = require("../helpers/firebase/getDocument");
 
 // @desc   Get a list of artists
 // @route  GET /artist?id=&&limit=
@@ -16,17 +16,22 @@ const ref = collection(getFirestore(app), "artists");
 
 const getArtist = asyncHandler(async (req, res, next) => {
   const data = [];
-  let q = query(ref);
+  let q;
   if (req.query.id && !req.query.limit) {
-    q = query(ref, where("artist_info.id", "==", id));
+    q = query(ref, where("artist_info.id", "==", req.query.id));
   } else if (!req.query.id && req.query.limit) {
     q = query(ref, limit(req.query.limit));
   }
 
   try {
-    const snapshot = await getDocs(q);
-    snapshot.forEach((doc) => data.push(doc.data()));
-    if (!data) {
+    const doc = await getFirebaseDoc(
+      "artists",
+      "artist_info.id",
+      "==",
+      req.query.id
+    );
+
+    if (!doc) {
       res.status(404).json({
         error: {
           status: 404,
@@ -34,7 +39,7 @@ const getArtist = asyncHandler(async (req, res, next) => {
         },
       });
     }
-    res.json(data);
+    res.status(200).json(doc);
   } catch (error) {
     next(error);
   }
