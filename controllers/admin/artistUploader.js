@@ -14,6 +14,15 @@ const imageUploader = require("./../../helpers/firebase/imageUploader");
 
 const uploadArtist = asyncHandler(async (req, res, next) => {
   validateReq(schema, req, res);
+  const whiteList = ["image/png", "image/jpeg"];
+  if (!whiteList.includes(req.file.mimetype)) {
+    return res.status(400).json({
+      error: {
+        status: 400,
+        message: "Wrong file type",
+      },
+    });
+  }
 
   const { name, description, country } = req.body;
   const docRef = collection(getFirestore(app), "artists");

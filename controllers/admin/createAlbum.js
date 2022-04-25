@@ -20,6 +20,16 @@ const imageUploader = require("./../../helpers/firebase/imageUploader");
 
 const createAlbum = asyncHandler(async (req, res, next) => {
   validateReq(schema, req, res);
+  const whiteList = ["image/png", "image/jpeg"];
+  if (!whiteList.includes(req.file.mimetype)) {
+    return res.status(400).json({
+      error: {
+        status: 400,
+        message: "Wrong file type",
+      },
+    });
+  }
+
   const { name, description, artist_list, genre } = req.body;
   const artist_doc_ids = await getDocIds(
     "artists",

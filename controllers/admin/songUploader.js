@@ -24,6 +24,15 @@ const imageUploader = require("./../../helpers/firebase/imageUploader");
 
 const uploadSong = asyncHandler(async (req, res, next) => {
   validateReq(schema, req, res);
+  const whiteList = ["audio/mp4", "audio/mpeg"];
+  if (!whiteList.includes(req.file.mimetype)) {
+    return res.status(400).json({
+      error: {
+        status: 400,
+        message: "Wrong file type",
+      },
+    });
+  }
 
   const {
     name,
