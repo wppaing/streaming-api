@@ -79,6 +79,7 @@ const uploadSong = asyncHandler(async (req, res, next) => {
       id,
       images: Object.values(i100[0]),
       type: "Song",
+      artist_list,
     });
     await updateDoc(doc(getFirestore(app), "albums", albumDocId[0]), {
       tracks: [

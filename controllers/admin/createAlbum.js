@@ -58,6 +58,7 @@ const createAlbum = asyncHandler(async (req, res, next) => {
       name,
       id,
       images: Object.values(i100[0]),
+      artist_list,
       type: "Album",
     });
     await Promise.all(
