@@ -1,51 +1,66 @@
 const { client } = require("./../../config/mongoConfig");
 
 const globalSearch = async (query) => {
-  const { keyword, limit } = query;
+  const { keyword, limit, type } = query;
+  const limitt = limit || 10;
 
   const agg = [
     {
       $search: {
-        index: "one",
         text: {
           query: keyword,
-          path: "title",
-          synonyms: "synonyms",
+          path: "name",
         },
       },
     },
     {
-      $limit: Math.floor(limit - limit / 2),
+      $limit: Math.floor(limitt - limitt / 2),
     },
     {
       $project: {
         _id: 0,
-        title: 1,
-        score: { $meta: "searchScore" },
+        id: 1,
+        name: 1,
+        images: 1,
+        type: 1,
       },
     },
   ];
 
-  const agg2 = [
+  const autocomplete = [
     {
       $search: {
-        autocomplete: {
-          query: keyword,
-          path: "name",
-          // score: { boost: { value: 2 } },
+        index: "autocomplete",
+        compound: {
+          filter: {
+            text: {
+              query: type,
+              path: "type",
+            },
+          },
+          should: [
+            {
+              autocomplete: {
+                query: keyword,
+                path: "name",
+              },
+            },
+          ],
         },
       },
     },
     {
-      $limit: Math.floor(limit - limit / 2),
+      $limit: Math.floor(limitt - limitt / 2),
     },
     {
       $project: {
-        _id: 0,
-        name: 1,
-        type: 1,
-        images: 1,
-        // score: { $meta: "searchScore" },
+        $project: {
+          _id: 0,
+          id: 1,
+          name: 1,
+          images: 1,
+          type: 1,
+        },
       },
     },
   ];
@@ -55,9 +70,10 @@ const globalSearch = async (query) => {
     .db(process.env.DEFAULT_MONGODB_NAME)
     .collection("autocompletedata");
   let cursor = await coll.aggregate(agg);
-  let cursor2 = await coll.aggregate(agg2);
   await cursor.forEach((doc) => data.push(doc));
-  await cursor2.forEach((doc) => data.push(doc));
+  let autocompleteCursor = await coll.aggregate(autocomplete);
+  await autocompleteCursor.forEach((doc) => data.push(doc));
+
   // data.sort((a, b) => b.score - a.score);
   return data;
 };

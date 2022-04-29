@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-// router.use(skipRoute("/login", authenticator));
 router.use("/", require("../middlewares/authenticator"));
 
 router.route("/artist").get(require("../controllers/artistController"));

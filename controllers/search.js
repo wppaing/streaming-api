@@ -4,24 +4,11 @@ const queryMongo = require("./../helpers/querymongo");
 const globalSearch = require("./searchcontrollers/globalsearch");
 
 // @desc   Global search endpoint
-// @route  GET /search?keyword=
+// @route  GET /search?keyword= &limit= &type=
 // @access Public
 
 const search = asyncHandler(async (req, res, next) => {
-  const keyword = req.query.keyword;
-  // const data = [];
   try {
-    const autocomplete = [];
-    // const coll = client.db("streamservice").collection("autocompletedata");
-    // const agg = [
-    //   { $search: { autocomplete: { query: req.query.keyword, path: "name" } } },
-    //   { $limit: 5 },
-    //   { $project: { _id: 1, name: 1, type: 1, image: 1 } },
-    // ];
-    // const result = await coll.aggregate(agg);
-    // await result.forEach((doc) => autocomplete.push(doc));
-    // data.push({ items: autocomplete, section_title: "best-matches" });
-
     const data = await globalSearch(req.query);
     res.status(200).json({
       section_list: data,
