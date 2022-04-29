@@ -54,13 +54,11 @@ const globalSearch = async (query) => {
     },
     {
       $project: {
-        $project: {
-          _id: 0,
-          id: 1,
-          name: 1,
-          images: 1,
-          type: 1,
-        },
+        _id: 0,
+        id: 1,
+        name: 1,
+        images: 1,
+        type: 1,
       },
     },
   ];
