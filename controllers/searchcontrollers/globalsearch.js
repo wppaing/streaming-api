@@ -32,12 +32,20 @@ const globalSearch = async (query) => {
       $search: {
         index: "autocomplete",
         compound: {
-          filter: {
-            text: {
-              query: type,
-              path: "type",
-            },
-          },
+          filter: type
+            ? {
+                text: {
+                  query: type,
+                  path: "type",
+                },
+              }
+            : {
+                wildcard: {
+                  query: "*",
+                  path: "type",
+                  allowAnalyzedField: true,
+                },
+              },
           should: [
             {
               autocomplete: {
@@ -67,10 +75,16 @@ const globalSearch = async (query) => {
   const coll = client
     .db(process.env.DEFAULT_MONGODB_NAME)
     .collection("autocompletedata");
-  let cursor = await coll.aggregate(agg);
-  await cursor.forEach((doc) => data.push(doc));
-  let autocompleteCursor = await coll.aggregate(autocomplete);
-  await autocompleteCursor.forEach((doc) => data.push(doc));
+
+  if (!type) {
+    let cursor = await coll.aggregate(agg);
+    await cursor.forEach((doc) => data.push(doc));
+    let autocompleteCursor = await coll.aggregate(autocomplete);
+    await autocompleteCursor.forEach((doc) => data.push(doc));
+  } else {
+    let autocompleteCursor = await coll.aggregate(autocomplete);
+    await autocompleteCursor.forEach((doc) => data.push(doc));
+  }
 
   // data.sort((a, b) => b.score - a.score);
   return data;
