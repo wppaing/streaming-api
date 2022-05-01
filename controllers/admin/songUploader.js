@@ -8,6 +8,7 @@ const {
   getFirestore,
   addDoc,
   updateDoc,
+  arrayUnion,
 } = require("firebase/firestore");
 const schema = require("./../../schemas/admin/songSchema");
 const { ref, getStorage } = require("firebase/storage");
@@ -82,13 +83,11 @@ const uploadSong = asyncHandler(async (req, res, next) => {
       artist_list,
     });
     await updateDoc(doc(getFirestore(app), "albums", albumDocId[0]), {
-      tracks: [
-        {
-          name,
-          id,
-          play_duration,
-        },
-      ],
+      tracks: arrayUnion({
+        name,
+        id,
+        play_duration,
+      }),
     });
     res.status(200).json({
       status: "success",
