@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-router.use("/", require("../middlewares/authenticator"));
+// router.use("/", require("../middlewares/authenticator"));
 
 router.route("/artist").get(require("../controllers/artistController"));
 router.route("/album").get(require("../controllers/albumController"));
