@@ -27,20 +27,21 @@ const getAlbum = asyncHandler(async (req, res, next) => {
     });
   }
   try {
-    const data = [];
     const id = req.query.id;
     const q = query(ref, where("id", "==", id));
     const snapshot = await getDocs(q);
-    snapshot.forEach((doc) => data.push(doc.data()));
-    if (!data) {
-      res.status(404).json({
-        error: {
-          status: 404,
-          message: "Not found",
-        },
-      });
-    }
-    res.status(200).json(data);
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (!data) {
+        return res.status(404).json({
+          error: {
+            status: 404,
+            message: "Not found",
+          },
+        });
+      }
+      res.status(200).json(data);
+    });
   } catch (error) {
     next(error);
   }
