@@ -89,7 +89,8 @@ const globalSearch = async (query) => {
   }
 
   // data.sort((a, b) => b.score - a.score);
-  return data;
+
+  return [...new Map(data.map((el) => [JSON.stringify(el), el])).values()];
 };
 
 module.exports = globalSearch;
