@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 
-router.use("/", require("../middlewares/authenticator"));
-router.use("/", require("../middlewares/adminAuth"));
+// router.use("/", require("../middlewares/authenticator"));
+// router.use("/", require("../middlewares/adminAuth"));
 router
   .route("/upload-artist")
   .post(

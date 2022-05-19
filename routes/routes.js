@@ -11,5 +11,11 @@ router.route("/search").get(require("../controllers/search"));
 router
   .route("/search/artist")
   .get(require("../controllers/searchcontrollers/artistSearch"));
+router
+  .route("/homepage/playlists")
+  .get(require("../controllers/home/randomPlaylist"));
+router
+  .route("/homepage/artists")
+  .get(require("../controllers/home/randomArtist"));
 
 module.exports = router;
