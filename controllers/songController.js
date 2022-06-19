@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const getDocument = require("../helpers/firebase/getDocument");
 const Joi = require("joi");
+const updateOne = require("../helpers/mongo/updateOne");
 
 // @desc   Get song details
 // @route  GET /song?id
@@ -28,6 +29,18 @@ const getSong = asyncHandler(async (req, res, next) => {
         },
       });
     }
+    // Increment listen count of the song
+    await updateOne(
+      "listencount",
+      { id: req.query.id, type: "song" },
+      { $inc: { qty: 1 } }
+    );
+    // Also increment to artist profile
+    await updateOne(
+      "listencount",
+      { id: data.artist_list[0].id, type: "artist" },
+      { $inc: { qty: 1 } }
+    );
     res.json(data);
   } catch (error) {
     next(error);

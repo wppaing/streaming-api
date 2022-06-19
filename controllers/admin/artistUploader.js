@@ -55,6 +55,11 @@ const uploadArtist = asyncHandler(async (req, res, next) => {
       images: Object.values(i100[0]),
       type: "Artist",
     });
+    await insertOne("listencount", {
+      id,
+      type: "artist",
+      qty: 0,
+    });
     res.status(200).json({
       status: "success",
       document,
